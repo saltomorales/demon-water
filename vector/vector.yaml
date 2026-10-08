@@ -1,20 +1,174 @@
-# Skeleton: accept beacons and log them. Parsing, validation, tenant
-# allowlist, UA enrichment and the ClickHouse sink come in the next tasks.
+# RUM ingest: sendBeacon → validate → one row per metric → ClickHouse.
+# Env (set by start.sh on Upsun, by test.sh locally):
+#   PORT, VECTOR_TENANTS_FILE, CLICKHOUSE_URL, CLICKHOUSE_USERNAME, CLICKHOUSE_PASSWORD
 data_dir: "${PLATFORM_APP_DIR:-.}/.vector-data"
+
+enrichment_tables:
+  # Allowlist: page origin → tenant. Unknown origins are rejected.
+  tenants:
+    type: file
+    file:
+      path: "${VECTOR_TENANTS_FILE}"
+      encoding:
+        type: csv
+    schema:
+      origin: string
+      tenant: string
 
 sources:
   beacon:
     type: http_server
-    address: "0.0.0.0:${PORT:-8080}"
+    address: "0.0.0.0:${PORT}"
     path: /rum
     method: POST
-    # sendBeacon sends text/plain; parse JSON later in a remap regardless of Content-Type.
+    # Raw body, parsed in VRL regardless of Content-Type (sendBeacon sends text/plain).
     decoding:
       codec: bytes
+    headers:
+      - Origin
+      - User-Agent
+
+transforms:
+  # Beacon contract (v1), produced by collector/:
+  #   { "v": 1, "url": "...", "pageType": "...", "cache": "...", "release": "...", "ect": "4g",
+  #     "metrics": [ { "name", "id", "value", "delta", "rating", "navigationType", "attribution" } ] }
+  # Beacon-level problems drop the whole beacon (→ beacon_to_metrics.dropped).
+  # Metric-level problems drop only that metric.
+  beacon_to_metrics:
+    type: remap
+    inputs: [beacon]
+    drop_on_error: true
+    drop_on_abort: true
+    reroute_dropped: true
+    source: |
+      body = string!(.message)
+      assert!(strlen(body) <= 65536, message: "body too large")
+
+      origin = string(.Origin) ?? ""
+      tenant_row, err = get_enrichment_table_record("tenants", {"origin": origin})
+      assert!(err == null, message: "unknown origin")
+      tenant = string!(tenant_row.tenant)
+
+      beacon = object!(parse_json!(body, max_depth: 8))
+      assert!(beacon.v == 1, message: "unsupported beacon version")
+      metrics = array!(beacon.metrics)
+      assert!(length(metrics) <= 20, message: "too many metrics")
+
+      # The page URL must belong to the origin; keep only the path (no query, no fragment).
+      url = parse_url!(string!(beacon.url))
+      url_origin = url.scheme + "://" + url.host
+      if url.port != null { url_origin = url_origin + ":" + to_string(url.port) }
+      assert!(url_origin == origin, message: "url does not match origin")
+      url_path = truncate(string(url.path) ?? "/", limit: 512)
+
+      page_type = string(beacon.pageType) ?? "other"
+      if !includes(["cms-index-index", "catalog-category-view", "catalog-product-view"], page_type) {
+        page_type = "other"
+      }
+      cache_status = truncate(string(beacon.cache) ?? "", limit: 32)
+      release = truncate(string(beacon.release) ?? "", limit: 64)
+      effective_type = string(beacon.ect) ?? ""
+      if !includes(["slow-2g", "2g", "3g", "4g"], effective_type) { effective_type = "" }
+
+      # Device and browser from the User-Agent; the raw UA and IP are never stored.
+      ua = parse_user_agent(string(."User-Agent") ?? "", mode: "reliable")
+      device = "other"
+      category = ua.device.category
+      if category == "pc" { device = "desktop" } else if category == "smartphone" { device = "mobile" } else if category == "tablet" { device = "tablet" }
+      browser = string(ua.browser.family) ?? "Other"
+      browser_major = string(split(string(ua.browser.version) ?? "", ".")[0]) ?? ""
+      os = string(ua.os.family) ?? "Other"
+
+      ts = .timestamp
+      names = ["LCP", "INP", "CLS", "FCP", "TTFB"]
+      ratings = ["good", "needs-improvement", "poor"]
+      nav_types = ["navigate", "reload", "back-forward", "back-forward-cache", "prerender", "restore"]
+
+      rows = map_values(metrics) -> |m| {
+        row = null
+        if is_object(m) {
+          name = string(m.name) ?? ""
+          id = string(m.id) ?? ""
+          value = m.value
+          delta = m.delta
+          numeric = (is_float(value) || is_integer(value)) && (is_float(delta) || is_integer(delta))
+          ok = numeric &&
+            includes(names, name) &&
+            id != "" && strlen(id) <= 128 &&
+            includes(ratings, m.rating) &&
+            includes(nav_types, m.navigationType)
+          if ok {
+            v = to_float!(value)
+            # Impossible values: CLS outside 0..10; timings outside 0..60000 ms.
+            ok = if name == "CLS" { v >= 0.0 && v <= 10.0 } else { v >= 0.0 && v <= 60000.0 }
+            if ok {
+              attribution = "{}"
+              if is_object(m.attribution) {
+                a = encode_json(m.attribution)
+                if strlen(a) <= 4096 { attribution = a }
+              }
+              row = {
+                "ts": ts,
+                "tenant": tenant,
+                "metric": name,
+                "id": id,
+                "value": v,
+                "delta": to_float!(delta),
+                "rating": m.rating,
+                "navigation_type": m.navigationType,
+                "page_type": page_type,
+                "url_path": url_path,
+                "cache_status": cache_status,
+                "release": release,
+                "effective_type": effective_type,
+                "device": device,
+                "browser": browser,
+                "browser_major": browser_major,
+                "os": os,
+                "attribution": attribution
+              }
+            }
+          }
+        }
+        row
+      }
+      # An array root emits one event per element. (Not compact(): it would also strip "" fields.)
+      . = filter(rows) -> |_i, r| { r != null }
+
+  # Rejected beacons: log only the reason and origin (never the body), rate-limited.
+  rejected:
+    type: remap
+    inputs: [beacon_to_metrics.dropped]
+    source: |
+      . = {
+        "rejected": string(.metadata.dropped.message) ?? "unknown",
+        "origin": .Origin
+      }
+  rejected_throttled:
+    type: throttle
+    inputs: [rejected]
+    threshold: 20
+    window_secs: 60
 
 sinks:
-  stdout:
+  clickhouse:
+    type: clickhouse
+    inputs: [beacon_to_metrics]
+    endpoint: "${CLICKHOUSE_URL}"
+    database: rum
+    table: web_vitals
+    auth:
+      strategy: basic
+      user: "${CLICKHOUSE_USERNAME}"
+      password: "${CLICKHOUSE_PASSWORD}"
+    date_time_best_effort: true
+    # Batched inserts: up to 5000 rows or every 5 s, whichever comes first.
+    batch:
+      max_events: 5000
+      timeout_secs: 5
+
+  rejected_log:
     type: console
-    inputs: [beacon]
+    inputs: [rejected_throttled]
     encoding:
       codec: json

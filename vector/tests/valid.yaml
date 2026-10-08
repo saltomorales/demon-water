@@ -1,0 +1,106 @@
+tests:
+  - name: valid beacon becomes one row per metric, context attached, PII dropped
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+          message: '{"v":1,"url":"https://shop-a.example/p/shoe.html?email=a@b.c#top","pageType":"catalog-product-view","cache":"HIT","release":"2026.10.1","ect":"4g","metrics":[{"name":"LCP","id":"v5-1","value":2100.5,"delta":2100.5,"rating":"good","navigationType":"navigate","attribution":{"target":"img.hero","url":"https://shop-a.example/hero.jpg","timeToFirstByte":300}},{"name":"CLS","id":"v5-2","value":0.12,"delta":0.02,"rating":"needs-improvement","navigationType":"navigate"},{"name":"INP","id":"v5-3","value":180,"delta":180,"rating":"good","navigationType":"navigate"},{"name":"FCP","id":"v5-4","value":900,"delta":900,"rating":"good","navigationType":"navigate"},{"name":"TTFB","id":"v5-5","value":300,"delta":300,"rating":"good","navigationType":"navigate"}]}'
+    outputs:
+      - extract_from: beacon_to_metrics
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.tenant, "shop-a")
+              assert!(includes(["LCP", "CLS", "INP", "FCP", "TTFB"], .metric))
+              assert_eq!(.url_path, "/p/shoe.html")
+              assert_eq!(.page_type, "catalog-product-view")
+              assert_eq!(.cache_status, "HIT")
+              assert_eq!(.release, "2026.10.1")
+              assert_eq!(.effective_type, "4g")
+              assert_eq!(.device, "desktop")
+              assert_eq!(.browser, "Chrome")
+              assert_eq!(.browser_major, "141")
+              assert_eq!(.navigation_type, "navigate")
+              assert!(is_timestamp(.ts))
+              assert!(is_float(.value))
+              # No raw body, UA, origin header or IP in the row.
+              assert_eq!(keys(.), ["attribution", "browser", "browser_major", "cache_status", "delta", "device", "effective_type", "id", "metric", "navigation_type", "os", "page_type", "rating", "release", "tenant", "ts", "url_path", "value"])
+              if .metric == "LCP" {
+                assert_eq!(.value, 2100.5)
+                assert_eq!(parse_json!(.attribution).target, "img.hero")
+              }
+              if .metric == "CLS" {
+                assert_eq!(.value, 0.12)
+                assert_eq!(.delta, 0.02)
+                assert_eq!(.attribution, "{}")
+              }
+              if .metric == "INP" { assert_eq!(.value, 180.0) }
+              true
+
+  - name: mobile UA, unknown page type and bad ect fall back, bfcache kept, port in origin
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "http://localhost:8080"
+          User-Agent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1"
+          message: '{"v":1,"url":"http://localhost:8080/","pageType":"checkout-index-index","ect":"5g","metrics":[{"name":"LCP","id":"v5-9","value":800,"delta":800,"rating":"good","navigationType":"back-forward-cache"}]}'
+    outputs:
+      - extract_from: beacon_to_metrics
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.tenant, "local")
+              assert_eq!(.device, "mobile")
+              assert_eq!(.browser, "Safari")
+              assert_eq!(.page_type, "other")
+              assert_eq!(.effective_type, "")
+              assert_eq!(.cache_status, "")
+              assert_eq!(.release, "")
+              assert_eq!(.navigation_type, "back-forward-cache")
+              assert_eq!(.url_path, "/")
+
+  - name: impossible or malformed metrics are dropped, valid ones in the same beacon kept
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          User-Agent: "curl/8.0"
+          message: '{"v":1,"url":"https://shop-a.example/","metrics":[{"name":"LCP","id":"a","value":60001,"delta":1,"rating":"poor","navigationType":"navigate"},{"name":"CLS","id":"b","value":10.5,"delta":1,"rating":"poor","navigationType":"navigate"},{"name":"INP","id":"c","value":-1,"delta":1,"rating":"good","navigationType":"navigate"},{"name":"TTFB","id":"d","value":"300","delta":1,"rating":"good","navigationType":"navigate"},{"name":"FID","id":"e","value":10,"delta":10,"rating":"good","navigationType":"navigate"},{"name":"LCP","id":"","value":10,"delta":10,"rating":"good","navigationType":"navigate"},{"name":"LCP","id":"f","value":10,"delta":10,"rating":"great","navigationType":"navigate"},{"name":"LCP","id":"g","value":10,"delta":10,"rating":"good","navigationType":"teleport"},{"name":"LCP","id":"h","value":10,"rating":"good","navigationType":"navigate"},"junk",{"name":"FCP","id":"ok","value":60000,"delta":60000,"rating":"poor","navigationType":"reload"}]}'
+    outputs:
+      - extract_from: beacon_to_metrics
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.id, "ok")
+              assert_eq!(.metric, "FCP")
+              assert_eq!(.value, 60000.0)
+              assert_eq!(.device, "other")
+
+  - name: oversized attribution is replaced with an empty object
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: vrl
+        source: |
+          .Origin = "https://shop-a.example"
+          ."User-Agent" = "curl/8.0"
+          big = "aaaaaaaaaa"
+          big = big + big
+          big = big + big
+          big = big + big
+          big = big + big
+          big = big + big
+          big = big + big
+          big = big + big
+          big = big + big
+          big = big + big
+          .message = encode_json({"v": 1, "url": "https://shop-a.example/", "metrics": [{"name": "INP", "id": "x", "value": 50, "delta": 50, "rating": "good", "navigationType": "navigate", "attribution": {"interactionTarget": big}}]})
+    outputs:
+      - extract_from: beacon_to_metrics
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.attribution, "{}")

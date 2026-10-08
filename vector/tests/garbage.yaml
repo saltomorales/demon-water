@@ -1,0 +1,115 @@
+# Each garbage beacon must produce no rows, and the rejection log must carry
+# only the reason and origin (never the body or the User-Agent).
+tests:
+  - name: unknown origin is rejected
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://evil.example"
+          User-Agent: "curl/8.0"
+          message: '{"v":1,"url":"https://evil.example/","metrics":[{"name":"LCP","id":"a","value":1,"delta":1,"rating":"good","navigationType":"navigate"}]}'
+    no_outputs_from: [beacon_to_metrics]
+    outputs:
+      - extract_from: rejected
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.rejected, "unknown origin")
+              assert_eq!(.origin, "https://evil.example")
+              assert_eq!(keys(.), ["origin", "rejected"])
+
+  - name: missing Origin header is rejected
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          message: '{"v":1,"url":"https://shop-a.example/","metrics":[{"name":"LCP","id":"a","value":1,"delta":1,"rating":"good","navigationType":"navigate"}]}'
+    no_outputs_from: [beacon_to_metrics]
+    outputs:
+      - extract_from: rejected
+        conditions:
+          - type: vrl
+            source: assert_eq!(.rejected, "unknown origin")
+
+  - name: page URL from another origin is rejected
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          message: '{"v":1,"url":"https://evil.example/","metrics":[{"name":"LCP","id":"a","value":1,"delta":1,"rating":"good","navigationType":"navigate"}]}'
+    no_outputs_from: [beacon_to_metrics]
+    outputs:
+      - extract_from: rejected
+        conditions:
+          - type: vrl
+            source: assert_eq!(.rejected, "url does not match origin")
+
+  - name: non-JSON body is rejected
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          message: "hello <script>alert(1)</script>"
+    no_outputs_from: [beacon_to_metrics]
+
+  - name: empty body is rejected
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          message: ""
+    no_outputs_from: [beacon_to_metrics]
+
+  - name: JSON array root is rejected
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          message: '[{"name":"LCP","id":"a","value":1}]'
+    no_outputs_from: [beacon_to_metrics]
+
+  - name: unsupported beacon version is rejected
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          message: '{"v":2,"url":"https://shop-a.example/","metrics":[{"name":"LCP","id":"a","value":1,"delta":1,"rating":"good","navigationType":"navigate"}]}'
+    no_outputs_from: [beacon_to_metrics]
+    outputs:
+      - extract_from: rejected
+        conditions:
+          - type: vrl
+            source: assert_eq!(.rejected, "unsupported beacon version")
+
+  - name: metrics that is not an array is rejected
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          message: '{"v":1,"url":"https://shop-a.example/","metrics":{"name":"LCP"}}'
+    no_outputs_from: [beacon_to_metrics]
+
+  - name: missing url is rejected
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          message: '{"v":1,"metrics":[{"name":"LCP","id":"a","value":1,"delta":1,"rating":"good","navigationType":"navigate"}]}'
+    no_outputs_from: [beacon_to_metrics]
+
+  - name: beacon with only impossible values produces no rows
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Origin: "https://shop-a.example"
+          message: '{"v":1,"url":"https://shop-a.example/","metrics":[{"name":"LCP","id":"a","value":-5,"delta":1,"rating":"good","navigationType":"navigate"},{"name":"CLS","id":"b","value":-0.1,"delta":1,"rating":"good","navigationType":"navigate"},{"name":"TTFB","id":"c","value":99999,"delta":1,"rating":"poor","navigationType":"navigate"}]}'
+    no_outputs_from: [beacon_to_metrics]

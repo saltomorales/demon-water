@@ -12,8 +12,13 @@ vector:
     root: vector
   stack:
     packages:
-      - vector
+      - curl
       - jq
+  # Official static binary (see install.sh), same version as local `vector test`.
+  hooks:
+    build: |
+      set -e
+      bash install.sh
   relationships:
     clickhouse:
       service: clickhouse
