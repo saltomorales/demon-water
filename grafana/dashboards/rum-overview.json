@@ -132,7 +132,7 @@
     {
       "type": "stat",
       "title": "LCP p75 (28 days)",
-      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "description": "p75 (linear interpolation, quantileExactInclusive) over per-page-view values deduped by metric id, fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
       "targets": [
         {
           "refId": "A",
@@ -143,7 +143,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'LCP'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'LCP'"
         }
       ],
       "fieldConfig": {
@@ -229,7 +229,7 @@
     {
       "type": "stat",
       "title": "INP p75 (28 days)",
-      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "description": "p75 (linear interpolation, quantileExactInclusive) over per-page-view values deduped by metric id, fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
       "targets": [
         {
           "refId": "A",
@@ -240,7 +240,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'INP'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'INP'"
         }
       ],
       "fieldConfig": {
@@ -326,7 +326,7 @@
     {
       "type": "stat",
       "title": "CLS p75 (28 days)",
-      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "description": "p75 (linear interpolation, quantileExactInclusive) over per-page-view values deduped by metric id, fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
       "targets": [
         {
           "refId": "A",
@@ -337,7 +337,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS'"
         }
       ],
       "fieldConfig": {
@@ -423,7 +423,7 @@
     {
       "type": "stat",
       "title": "FCP p75 (28 days)",
-      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "description": "p75 (linear interpolation, quantileExactInclusive) over per-page-view values deduped by metric id, fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
       "targets": [
         {
           "refId": "A",
@@ -434,7 +434,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'FCP'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'FCP'"
         }
       ],
       "fieldConfig": {
@@ -520,7 +520,7 @@
     {
       "type": "stat",
       "title": "TTFB p75 (28 days)",
-      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "description": "p75 (linear interpolation, quantileExactInclusive) over per-page-view values deduped by metric id, fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
       "targets": [
         {
           "refId": "A",
@@ -531,7 +531,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'TTFB'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'TTFB'"
         }
       ],
       "fieldConfig": {
@@ -628,7 +628,7 @@
           "editorType": "sql",
           "format": 0,
           "queryType": "timeseries",
-          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExact(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric != 'CLS' GROUP BY time, metric ORDER BY time"
+          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExactInclusive(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric != 'CLS' GROUP BY time, metric ORDER BY time"
         }
       ],
       "fieldConfig": {
@@ -676,7 +676,7 @@
           "editorType": "sql",
           "format": 0,
           "queryType": "timeseries",
-          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExact(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS' GROUP BY time, metric ORDER BY time"
+          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExactInclusive(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS' GROUP BY time, metric ORDER BY time"
         }
       ],
       "fieldConfig": {
@@ -760,7 +760,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT page_type, metric, count() AS page_views, round(quantileExact(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY page_type, metric ORDER BY page_type, metric"
+          "rawSql": "SELECT page_type, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY page_type, metric ORDER BY page_type, metric"
         }
       ],
       "fieldConfig": {
@@ -796,7 +796,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT navigation_type, metric, count() AS page_views, round(quantileExact(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY navigation_type, metric ORDER BY navigation_type, metric"
+          "rawSql": "SELECT navigation_type, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY navigation_type, metric ORDER BY navigation_type, metric"
         }
       ],
       "fieldConfig": {
@@ -831,7 +831,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT device, metric, count() AS page_views, round(quantileExact(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY device, metric ORDER BY device, metric"
+          "rawSql": "SELECT device, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY device, metric ORDER BY device, metric"
         }
       ],
       "fieldConfig": {

@@ -3,7 +3,7 @@
 -- Every query dedupes by metric id (last value wins), as the data rules require.
 
 -- 1. CrUX-style p75 per metric, last 28 days, per tenant (all navigation types).
-SELECT tenant, metric, count() AS page_views, round(quantileExact(0.75)(value), 3) AS p75
+SELECT tenant, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75
 FROM
 (
     SELECT tenant, metric, id, argMax(value, ts) AS value
@@ -15,7 +15,7 @@ GROUP BY tenant, metric
 ORDER BY tenant, metric;
 
 -- 2. Same, split by navigation type (bfcache/restore/prerender distort LCP and TTFB).
-SELECT tenant, metric, navigation_type, count() AS page_views, round(quantileExact(0.75)(value), 3) AS p75
+SELECT tenant, metric, navigation_type, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75
 FROM
 (
     SELECT tenant, metric, id, argMax(value, ts) AS value, argMax(navigation_type, ts) AS navigation_type
