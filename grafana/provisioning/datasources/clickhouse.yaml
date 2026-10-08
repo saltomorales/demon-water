@@ -1,0 +1,18 @@
+# CLICKHOUSE_* come from the Upsun relationship "clickhouse" (endpoint: dashboards, read-only).
+apiVersion: 1
+
+datasources:
+  - name: ClickHouse
+    uid: clickhouse
+    type: grafana-clickhouse-datasource
+    isDefault: true
+    editable: false
+    jsonData:
+      host: $CLICKHOUSE_HOST
+      port: $CLICKHOUSE_PORT
+      protocol: http
+      secure: false
+      username: $CLICKHOUSE_USERNAME
+      defaultDatabase: rum
+    secureJsonData:
+      password: $CLICKHOUSE_PASSWORD

@@ -1,0 +1,100 @@
+# Upsun project: RUM POC (Vector → ClickHouse → Grafana).
+# Reference: https://developer.upsun.com/docs/configure-apps/app-reference
+
+applications:
+  # Ingest: receives sendBeacon POSTs from shops, writes to ClickHouse.
+  vector:
+    type: "composable:26.05"
+    source:
+      root: "/"
+    stack:
+      packages:
+        - vector
+    relationships:
+      clickhouse:
+        service: clickhouse
+        endpoint: ingest
+    mounts:
+      "/.vector-data":
+        source: storage
+        source_path: vector-data
+    web:
+      commands:
+        # Vector >= 0.59 needs an explicit opt-in to read $PORT and relationship vars.
+        start: "vector --dangerously-allow-env-var-interpolation --config vector/vector.yaml"
+      upstream:
+        socket_family: tcp
+        protocol: http
+
+  # Dashboards: reads ClickHouse over the relationship, read-only.
+  grafana:
+    type: "composable:26.05"
+    source:
+      root: "/"
+    stack:
+      packages:
+        - grafana
+    relationships:
+      clickhouse:
+        service: clickhouse
+        endpoint: dashboards
+    variables:
+      env:
+        GF_AUTH_ANONYMOUS_ENABLED: "false"
+        GF_AUTH_DISABLE_SIGNOUT_MENU: "false"
+        GF_USERS_ALLOW_SIGN_UP: "false"
+        GF_ANALYTICS_REPORTING_ENABLED: "false"
+        GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+        GF_PATHS_DATA: "/app/.grafana-data"
+        GF_PATHS_LOGS: "/app/.grafana-data/log"
+        GF_PATHS_PLUGINS: "/app/.grafana-plugins"
+        GF_PATHS_PROVISIONING: "/app/grafana/provisioning"
+    mounts:
+      "/.grafana-data":
+        source: storage
+        source_path: grafana-data
+    hooks:
+      build: |
+        set -e
+        bash grafana/install-plugins.sh
+    web:
+      commands:
+        start: "bash grafana/start.sh"
+      upstream:
+        socket_family: tcp
+        protocol: http
+
+services:
+  # Never routed publicly; only reachable through relationships.
+  clickhouse:
+    type: clickhouse:26.8
+    configuration:
+      databases:
+        - rum
+      endpoints:
+        # Migrations / manual work via `upsun tunnel`.
+        admin:
+          default_database: rum
+          port: 8123
+          privileges:
+            rum: admin
+        # Vector sink (HTTP interface).
+        ingest:
+          default_database: rum
+          port: 8123
+          privileges:
+            rum: rw
+        # Grafana datasource.
+        dashboards:
+          default_database: rum
+          port: 8123
+          privileges:
+            rum: ro
+
+routes:
+  "https://{default}/":
+    type: upstream
+    upstream: "grafana:http"
+  "https://ingest.{default}/":
+    type: upstream
+    upstream: "vector:http"

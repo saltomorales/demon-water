@@ -73,6 +73,10 @@ docs/        reference docs
 ## Constraints
 
 - Upsun: composable image with Nix packages for Vector and Grafana; ClickHouse as a managed service (no HA, fine for the POC).
+    - Project `xeu4pm5hpww7u`, org creativestyle, region `eu-5.platform.sh` (Sweden, EU, low-carbon discount). Git remote `upsun`.
+    - Routes: `https://{default}/` → Grafana, `https://ingest.{default}/rum` → Vector.
+    - ClickHouse endpoints: `ingest` (rw, Vector), `dashboards` (ro, Grafana), `admin` (migrations via `upsun tunnel`).
+    - Vector ≥ 0.59 disables env-var interpolation by default; we start it with `--dangerously-allow-env-var-interpolation` (config is ours, needed for `$PORT` and relationship vars).
 - Collector runs cross-origin (shop → Upsun domain). The shop CSP `connect-src` may need our domain.
 - No changes to the Magento codebase during the POC.
 
