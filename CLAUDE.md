@@ -100,3 +100,7 @@ docs/        reference docs
 - Verified end to end: a beacon from a test page via Chrome DevTools MCP lands in ClickHouse and shows in Grafana.
 - Metric math reviewed against the data rules above.
 - `CLAUDE.md` updated if a decision changed.
+## Open items
+
+- **Shop allowlist (placeholder):** `vector/tenants.csv` has only the synthetic `e2e` tenant. Before the first real shop: add one line per origin (`https://www.shop.tld,shop`, exact scheme + host, one line per variant such as with/without `www`), push, and add the Upsun ingest domain to the shop CSP `connect-src`.
+- **Plan upgrade:** Development → Medium High Memory before real shop traffic; the team lead has to confirm the POC offer covers it.
