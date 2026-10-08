@@ -49,11 +49,16 @@ docs/        reference docs
 - Explode one beacon into one row per metric.
 - Write to ClickHouse in batches. No per-event inserts.
 - Every transform has a `vector test` case: valid beacons and garbage.
+- Beacon contract v1 (collector → Vector): `{"v":1,"url","pageType","cache","release","ect","metrics":[{"name","id","value","delta","rating","navigationType","attribution"}]}`. Max 64 KB, max 20 metrics.
+- Tenant allowlist: `vector/tenants.csv` (`origin,tenant`), matched against the `Origin` header; the page `url` must have the same origin. `https://rum-e2e.invalid` → `e2e` is the synthetic test tenant.
+- Beacon-level errors drop the whole beacon (logged as `{"rejected": reason, "origin"}` only, throttled). Metric-level errors drop just that metric. FCP uses the same 0..60000 ms bound as the other timings.
+- Device from `parse_user_agent` (reliable mode): `desktop`, `mobile`, `tablet`, `other`. Android tablets often come out as `mobile`.
+- Run tests: `./vector/test.sh` (uses `vector/tests/tenants.csv`). Local and server Vector must be the same version (`vector/install.sh`).
 
 ## Data rules
 
 - Units: milliseconds for all timings; CLS is unitless.
-- Dedupe by metric `id` (keep the last value).
+- Dedupe by metric `id` (keep the last value): `rum.web_vitals` is `ReplacingMergeTree(ts)` ordered by `(tenant, metric, id)`. Merges are eventual, so every query must dedupe itself (`FINAL` or `argMax(value, ts)` by id).
 - Percentiles: p75 over per-page-view values, 28-day window (CrUX-compatible).
 - Always allow segmenting by `navigationType`. `back-forward-cache`, `restore` and `prerender` distort LCP and TTFB.
 - Raw table: TTL 90 days. Daily aggregates (`quantileState` / `quantileMerge`): 13 months.
@@ -85,7 +90,7 @@ docs/        reference docs
     - ClickHouse binary: official static LTS build, pinned and sha512-checked in `clickhouse/install.sh` (the Nix package crashes on start: "Cannot allocate ThreadStack"). Upgrade by bumping `CH_VERSION`.
     - Containers expose no cgroup memory info: ClickHouse sees the host RAM, so memory caps in `config.xml`/`users.xml` must be absolute values.
     - Development plan: each app nominally gets 128 MB RAM / 0.4 CPU (`/run/config.json`), not enforced strictly but not production-grade.
-    - Vector on Upsun comes from Nix (0.55 on `composable:26.05`); keep the local `vector` version in mind when running `vector test`.
+    - Vector binary: official static build pinned in `vector/install.sh` (Nix only has 0.55), same version as local.
 - Collector runs cross-origin (shop → Upsun domain). The shop CSP `connect-src` may need our domain.
 - No changes to the Magento codebase during the POC.
 
