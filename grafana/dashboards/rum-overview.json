@@ -1,0 +1,906 @@
+{
+  "uid": "rum-overview",
+  "title": "RUM overview",
+  "tags": [
+    "rum"
+  ],
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "editable": false,
+  "refresh": "5m",
+  "time": {
+    "from": "now-28d",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "tenant",
+        "label": "Tenant",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "clickhouse"
+        },
+        "query": {
+          "rawSql": "SELECT DISTINCT tenant FROM rum.web_vitals WHERE ts >= now() - INTERVAL 90 DAY ORDER BY tenant",
+          "editorType": "sql",
+          "format": 1
+        },
+        "definition": "SELECT DISTINCT tenant FROM rum.web_vitals",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "page_type",
+        "label": "Page type",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "clickhouse"
+        },
+        "query": {
+          "rawSql": "SELECT DISTINCT page_type FROM rum.web_vitals WHERE ts >= now() - INTERVAL 90 DAY ORDER BY page_type",
+          "editorType": "sql",
+          "format": 1
+        },
+        "definition": "SELECT DISTINCT page_type FROM rum.web_vitals",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "device",
+        "label": "Device",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "clickhouse"
+        },
+        "query": {
+          "rawSql": "SELECT DISTINCT device FROM rum.web_vitals WHERE ts >= now() - INTERVAL 90 DAY ORDER BY device",
+          "editorType": "sql",
+          "format": 1
+        },
+        "definition": "SELECT DISTINCT device FROM rum.web_vitals",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "navigation_type",
+        "label": "Navigation type",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "clickhouse"
+        },
+        "query": {
+          "rawSql": "SELECT DISTINCT navigation_type FROM rum.web_vitals WHERE ts >= now() - INTERVAL 90 DAY ORDER BY navigation_type",
+          "editorType": "sql",
+          "format": 1
+        },
+        "definition": "SELECT DISTINCT navigation_type FROM rum.web_vitals",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "LCP p75 (28 days)",
+      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'LCP'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 2500
+              },
+              {
+                "color": "red",
+                "value": 4000
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "page_views"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "page views"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "orientation": "vertical"
+      },
+      "id": 1,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      }
+    },
+    {
+      "type": "stat",
+      "title": "INP p75 (28 days)",
+      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'INP'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 200
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "page_views"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "page views"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "orientation": "vertical"
+      },
+      "id": 2,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 5,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      }
+    },
+    {
+      "type": "stat",
+      "title": "CLS p75 (28 days)",
+      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.25
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "page_views"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "page views"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "orientation": "vertical"
+      },
+      "id": 3,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 10,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      }
+    },
+    {
+      "type": "stat",
+      "title": "FCP p75 (28 days)",
+      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'FCP'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1800
+              },
+              {
+                "color": "red",
+                "value": 3000
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "page_views"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "page views"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "orientation": "vertical"
+      },
+      "id": 4,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 15,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      }
+    },
+    {
+      "type": "stat",
+      "title": "TTFB p75 (28 days)",
+      "description": "p75 over per-page-view values (deduped by metric id), fixed 28-day window like CrUX. Thresholds: Core Web Vitals good / poor.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT quantileExact(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'TTFB'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 800
+              },
+              {
+                "color": "red",
+                "value": 1800
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "page_views"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "page views"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "orientation": "vertical"
+      },
+      "id": 5,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Daily p75: LCP, INP, FCP, TTFB (ms)",
+      "description": "Per day of first sighting of the page view, deduped by metric id. Raw data is kept 90 days.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 0,
+          "queryType": "timeseries",
+          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExact(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric != 'CLS' GROUP BY time, metric ORDER BY time"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "pointSize": 6,
+            "showPoints": "always"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "id": 6,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 16,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Daily p75: CLS",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 0,
+          "queryType": "timeseries",
+          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExact(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS' GROUP BY time, metric ORDER BY time"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 3,
+          "custom": {
+            "drawStyle": "line",
+            "pointSize": 6,
+            "showPoints": "always"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "id": 7,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 5,
+        "w": 8,
+        "h": 8
+      }
+    },
+    {
+      "type": "table",
+      "title": "Rating distribution (28 days)",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT metric, count() AS page_views, round(countIf(rating = 'good') / count() * 100, 1) AS good_pct, round(countIf(rating = 'needs-improvement') / count() * 100, 1) AS needs_improvement_pct, round(countIf(rating = 'poor') / count() * 100, 1) AS poor_pct FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY metric ORDER BY metric"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      },
+      "id": 8,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 7
+      }
+    },
+    {
+      "type": "table",
+      "title": "p75 by page type (28 days)",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT page_type, metric, count() AS page_views, round(quantileExact(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY page_type, metric ORDER BY page_type, metric"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      },
+      "id": 9,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 7
+      }
+    },
+    {
+      "type": "table",
+      "title": "p75 by navigation type (28 days)",
+      "description": "back-forward-cache, restore and prerender distort LCP and TTFB; filter them with the navigation_type variable.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT navigation_type, metric, count() AS page_views, round(quantileExact(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY navigation_type, metric ORDER BY navigation_type, metric"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      },
+      "id": 10,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 7
+      }
+    },
+    {
+      "type": "table",
+      "title": "p75 by device (28 days)",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT device, metric, count() AS page_views, round(quantileExact(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY device, metric ORDER BY device, metric"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      },
+      "id": 11,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 7
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Daily p75 from aggregates (13 months)",
+      "description": "rum.web_vitals_daily (refreshed hourly, deduped); quantileMerge over the selected segments.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 0,
+          "queryType": "timeseries",
+          "rawSql": "SELECT toDateTime(day) AS time, metric, quantileMerge(0.75)(p75_state) AS p75 FROM rum.web_vitals_daily FINAL WHERE tenant IN (${tenant:singlequote}) AND page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric != 'CLS' AND $__timeFilter(toDateTime(day)) GROUP BY time, metric ORDER BY time"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "pointSize": 6,
+            "showPoints": "always"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "id": 12,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 24,
+        "h": 8
+      }
+    }
+  ]
+}
