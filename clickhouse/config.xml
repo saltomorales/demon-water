@@ -25,8 +25,10 @@
     <default_profile>default</default_profile>
     <default_database>rum</default_database>
 
-    <!-- Keep memory small: the container shares RAM with nothing else, but the plan is tiny. -->
-    <max_server_memory_usage_to_ram_ratio>0.75</max_server_memory_usage_to_ram_ratio>
+    <!-- Keep memory small. Upsun containers expose no cgroup memory file, so ClickHouse sees the
+         host's RAM (~124 GiB) and a ratio would be meaningless: cap it with an absolute value.
+         Development plan nominally gives each app 128 MB / 0.4 CPU; raise this with the plan. -->
+    <max_server_memory_usage>1073741824</max_server_memory_usage>
     <mark_cache_size>268435456</mark_cache_size>
     <index_mark_cache_size>67108864</index_mark_cache_size>
     <uncompressed_cache_size>0</uncompressed_cache_size>

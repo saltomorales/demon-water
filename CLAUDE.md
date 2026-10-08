@@ -82,6 +82,10 @@ docs/        reference docs
     - Schema: `clickhouse/schema/*.sql`, applied in order by `migrate.sh` on every start (`post_start`), so every statement must be idempotent.
     - Vector ≥ 0.59 disables env-var interpolation by default; we start it with `--dangerously-allow-env-var-interpolation` (config is ours, needed for `$PORT` and ClickHouse credentials).
     - `upsun app:config-validate` only understands the Flex format; the real validation happens on `git push upsun`.
+    - ClickHouse binary: official static LTS build, pinned and sha512-checked in `clickhouse/install.sh` (the Nix package crashes on start: "Cannot allocate ThreadStack"). Upgrade by bumping `CH_VERSION`.
+    - Containers expose no cgroup memory info: ClickHouse sees the host RAM, so memory caps in `config.xml`/`users.xml` must be absolute values.
+    - Development plan: each app nominally gets 128 MB RAM / 0.4 CPU (`/run/config.json`), not enforced strictly but not production-grade.
+    - Vector on Upsun comes from Nix (0.55 on `composable:26.05`); keep the local `vector` version in mind when running `vector test`.
 - Collector runs cross-origin (shop → Upsun domain). The shop CSP `connect-src` may need our domain.
 - No changes to the Magento codebase during the POC.
 
