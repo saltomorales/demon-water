@@ -19,7 +19,7 @@ tests:
               assert_eq!(.origin, "https://evil.example")
               assert_eq!(keys(.), ["origin", "rejected"])
 
-  - name: missing Origin header is rejected
+  - name: missing Origin and Referer headers is rejected
     inputs:
       - insert_at: beacon_to_metrics
         type: log
@@ -112,4 +112,13 @@ tests:
         log_fields:
           Origin: "https://shop-a.example"
           message: '{"v":1,"url":"https://shop-a.example/","metrics":[{"name":"LCP","id":"a","value":-5,"delta":1,"rating":"good","navigationType":"navigate"},{"name":"CLS","id":"b","value":-0.1,"delta":1,"rating":"good","navigationType":"navigate"},{"name":"TTFB","id":"c","value":99999,"delta":1,"rating":"poor","navigationType":"navigate"}]}'
+    no_outputs_from: [beacon_to_metrics]
+
+  - name: Referer from another origin cannot stand in for a missing Origin
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Referer: "https://evil.example/page"
+          message: '{"v":1,"url":"https://shop-a.example/","metrics":[{"name":"LCP","id":"a","value":1,"delta":1,"rating":"good","navigationType":"navigate"}]}'
     no_outputs_from: [beacon_to_metrics]

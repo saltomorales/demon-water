@@ -26,6 +26,7 @@ sources:
       codec: bytes
     headers:
       - Origin
+      - Referer
       - User-Agent
 
 transforms:
@@ -44,7 +45,17 @@ transforms:
       body = string!(.message)
       assert!(strlen(body) <= 65536, message: "body too large")
 
+      # Page origin: the Origin header, or the origin part of Referer when the browser omits
+      # Origin (Chrome does for same-origin beacons). Both are browser-set; the Referer
+      # itself (which can carry a query string) is never stored.
       origin = string(.Origin) ?? ""
+      if origin == "" || origin == "null" {
+        ref, ref_err = parse_url(string(.Referer) ?? "")
+        if ref_err == null {
+          origin = (string(ref.scheme) ?? "") + "://" + (string(ref.host) ?? "")
+          if ref.port != null { origin = origin + ":" + to_string(ref.port) }
+        }
+      }
       tenant_row, err = get_enrichment_table_record("tenants", {"origin": origin})
       assert!(err == null, message: "unknown origin")
       tenant = string!(tenant_row.tenant)
@@ -144,6 +155,7 @@ transforms:
         "rejected": string(.metadata.dropped.message) ?? "unknown",
         "origin": .Origin
       }
+      # Referer is not logged: it can carry the page query string.
   rejected_throttled:
     type: throttle
     inputs: [rejected]

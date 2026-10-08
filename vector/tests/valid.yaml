@@ -104,3 +104,22 @@ tests:
           - type: vrl
             source: |
               assert_eq!(.attribution, "{}")
+
+  - name: same-origin beacon without Origin uses the Referer origin; Referer is not stored
+    inputs:
+      - insert_at: beacon_to_metrics
+        type: log
+        log_fields:
+          Referer: "https://shop-a.example/p/shoe.html?email=a@b.c"
+          User-Agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+          message: '{"v":1,"url":"https://shop-a.example/p/shoe.html","metrics":[{"name":"TTFB","id":"t","value":110,"delta":110,"rating":"good","navigationType":"navigate"}]}'
+    outputs:
+      - extract_from: beacon_to_metrics
+        conditions:
+          - type: vrl
+            source: |
+              assert_eq!(.tenant, "shop-a")
+              assert_eq!(.url_path, "/p/shoe.html")
+              assert!(!exists(.Referer))
+              assert!(!contains(encode_json(.), "email"))
+              true
