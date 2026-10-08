@@ -129,13 +129,15 @@ function setup({ random = 0, sampleRate = 1 } = {}) {
     addEventListener: (type, cb) => listeners.push({ type, cb }),
   };
   const context = () => ({ url: 'https://shop.example/p.html', pageType: 'catalog-product-view', cache: 'HIT', release: null, ect: '4g' });
-  const c = createCollector({ vitals, send, win: {}, doc, sampleRate, random: () => random, context });
+  const win = { addEventListener: (type, cb) => listeners.push({ type, cb }) };
+  const c = createCollector({ vitals, send, win, doc, sampleRate, random: () => random, context });
+  const pagehide = () => listeners.filter((l) => l.type === 'pagehide').forEach((l) => l.cb());
   const hide = () => {
     visibility = 'hidden';
     listeners.filter((l) => l.type === 'visibilitychange').forEach((l) => l.cb());
     visibility = 'visible';
   };
-  return { c, handlers, send, hide, vitals };
+  return { c, handlers, send, hide, pagehide, vitals };
 }
 
 const metric = (name, id, value, extra = {}) => ({ name, id, value, delta: value, rating: 'good', navigationType: 'navigate', attribution: {}, ...extra });
@@ -172,6 +174,17 @@ describe('createCollector', () => {
     expect(second.map((m) => [m.id, m.value])).toEqual([['c1', 0.2], ['l2', 300]]);
   });
 
+  it('flushes on pagehide for never-visible pages, without double sends', () => {
+    const { c, handlers, send, hide, pagehide } = setup();
+    c.start();
+    handlers.TTFB(metric('TTFB', 't1', 120));
+    pagehide();
+    expect(send).toHaveBeenCalledTimes(1);
+    hide();
+    pagehide();
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
   it('samples once per page view', () => {
     const out = setup({ random: 0.7, sampleRate: 0.5 });
     expect(out.c.sampled).toBe(false);
@@ -183,7 +196,7 @@ describe('createCollector', () => {
   it('never throws when web-vitals, send or context fail', () => {
     const vitals = { onLCP: () => { throw new Error('x'); }, onINP: () => {}, onCLS: () => {}, onFCP: () => {}, onTTFB: () => {} };
     const doc = { visibilityState: 'hidden', addEventListener: () => {} };
-    const c = createCollector({ vitals, send: () => { throw new Error('send'); }, win: {}, doc, sampleRate: 1, random: () => 0, context: () => { throw new Error('ctx'); } });
+    const c = createCollector({ vitals, send: () => { throw new Error('send'); }, win: { addEventListener: () => {} }, doc, sampleRate: 1, random: () => 0, context: () => { throw new Error('ctx'); } });
     expect(() => c.start()).not.toThrow();
     expect(() => c.record(null)).not.toThrow();
     c.record(metric('LCP', 'l1', 1));

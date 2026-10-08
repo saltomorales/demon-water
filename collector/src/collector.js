@@ -178,6 +178,14 @@ export function createCollector(deps) {
           if (deps.doc.visibilityState === 'hidden') flush();
         } catch (e) {}
       });
+      // Fallback for pages that never became visible (opened in a background tab and
+      // closed): there is no hidden transition, so flush on pagehide. Nothing is sent
+      // twice, since flush() empties the buffer.
+      deps.win.addEventListener('pagehide', () => {
+        try {
+          flush();
+        } catch (e) {}
+      });
     } catch (e) {}
     return true;
   }
