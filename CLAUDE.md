@@ -7,7 +7,7 @@ Self-hosted Real User Monitoring for Magento 2 shops. Goal: replace RUM Vision w
 ```
 Browser (web-vitals/attribution + wrapper, injected via GTM)
   → sendBeacon (text/plain) → Vector (Upsun app)
-  → ClickHouse (Upsun service) → Grafana (Upsun app)
+  → ClickHouse (Upsun app, self-managed) → Grafana (Upsun app)
 ```
 
 Reference docs: `docs/open-source-rum-stack.md`, `docs/porownanie-rum.md`.
@@ -17,10 +17,10 @@ Reference docs: `docs/open-source-rum-stack.md`, `docs/porownanie-rum.md`.
 ```
 collector/   browser wrapper, built to a single IIFE for a GTM Custom HTML tag
 vector/      vector.yaml + unit tests (vector test)
-clickhouse/  schema, materialized views, sanity queries
+clickhouse/  server config, users, schema (applied on start), sanity queries
 grafana/     provisioning: datasource + dashboards (JSON)
 local/       docker-compose for local dev
-.upsun/      config.yaml
+.platform/   applications.yaml, routes.yaml, services.yaml (Upsun Fixed format)
 docs/        reference docs
 ```
 
@@ -66,17 +66,22 @@ docs/        reference docs
 
 ## Security
 
-- ClickHouse is never exposed publicly; Grafana reads it via an Upsun relationship.
+- ClickHouse is never exposed publicly (no route); Vector and Grafana reach it via app-to-app relationships.
+- ClickHouse users: `vector` (INSERT/SELECT on `rum`), `grafana` (SELECT, readonly profile), `admin` (migrations). Passwords: Upsun sensitive variables `env:CH_*_PASSWORD`.
 - Secrets go in Upsun variables only, never in the repo.
 - Grafana: anonymous access off.
 
 ## Constraints
 
-- Upsun: composable image with Nix packages for Vector and Grafana; ClickHouse as a managed service (no HA, fine for the POC).
+- Upsun **Fixed** (our org is Fixed; Flex is not an option). Fixed has no ClickHouse service, so ClickHouse runs as a composable app (Nix `clickhouse`) with a local disk. We own its upgrades, memory tuning and backups. No HA, fine for the POC.
+    - All three apps use `composable:26.05` with Nix packages; each app has its own source root (`vector/`, `clickhouse/`, `grafana/`).
     - Project `xeu4pm5hpww7u`, org creativestyle, region `eu-5.platform.sh` (Sweden, EU, low-carbon discount). Git remote `upsun`.
+    - Plan: Development (free under the company's Upsun POC offer, to be confirmed) while building; Medium High Memory before real shop traffic. Disk is shared across apps: keep the sum of `disk` within the plan.
     - Routes: `https://{default}/` → Grafana, `https://ingest.{default}/rum` → Vector.
-    - ClickHouse endpoints: `ingest` (rw, Vector), `dashboards` (ro, Grafana), `admin` (migrations via `upsun tunnel`).
-    - Vector ≥ 0.59 disables env-var interpolation by default; we start it with `--dangerously-allow-env-var-interpolation` (config is ours, needed for `$PORT` and relationship vars).
+    - Relationship credentials are read from `$PLATFORM_RELATIONSHIPS` (base64 JSON, parsed with `jq`) in each app's `start.sh`.
+    - Schema: `clickhouse/schema/*.sql`, applied in order by `migrate.sh` on every start (`post_start`), so every statement must be idempotent.
+    - Vector ≥ 0.59 disables env-var interpolation by default; we start it with `--dangerously-allow-env-var-interpolation` (config is ours, needed for `$PORT` and ClickHouse credentials).
+    - `upsun app:config-validate` only understands the Flex format; the real validation happens on `git push upsun`.
 - Collector runs cross-origin (shop → Upsun domain). The shop CSP `connect-src` may need our domain.
 - No changes to the Magento codebase during the POC.
 

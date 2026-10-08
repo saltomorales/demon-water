@@ -1,0 +1,8 @@
+# ClickHouse deliberately has no route.
+"https://{default}/":
+  type: upstream
+  upstream: "grafana:http"
+
+"https://ingest.{default}/":
+  type: upstream
+  upstream: "vector:http"

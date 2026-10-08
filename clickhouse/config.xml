@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!-- Single-node ClickHouse for a small Upsun Fixed container. -->
+<clickhouse>
+    <logger>
+        <level>information</level>
+        <console>1</console>
+    </logger>
+
+    <listen_host>0.0.0.0</listen_host>
+    <!-- HTTP on the port Upsun assigns; the relationship "http" endpoint points here. -->
+    <http_port from_env="PORT"/>
+    <!-- Native protocol, for `clickhouse client` inside the container (no route, no relationship). -->
+    <tcp_port>9000</tcp_port>
+
+    <path>/app/.clickhouse-data/</path>
+    <tmp_path>/app/.clickhouse-data/tmp/</tmp_path>
+    <user_files_path>/app/.clickhouse-data/user_files/</user_files_path>
+    <format_schema_path>/app/.clickhouse-data/format_schemas/</format_schema_path>
+
+    <user_directories>
+        <users_xml>
+            <path>users.xml</path>
+        </users_xml>
+    </user_directories>
+    <default_profile>default</default_profile>
+    <default_database>rum</default_database>
+
+    <!-- Keep memory small: the container shares RAM with nothing else, but the plan is tiny. -->
+    <max_server_memory_usage_to_ram_ratio>0.75</max_server_memory_usage_to_ram_ratio>
+    <mark_cache_size>268435456</mark_cache_size>
+    <index_mark_cache_size>67108864</index_mark_cache_size>
+    <uncompressed_cache_size>0</uncompressed_cache_size>
+    <max_concurrent_queries>20</max_concurrent_queries>
+    <background_pool_size>2</background_pool_size>
+    <background_schedule_pool_size>4</background_schedule_pool_size>
+
+    <!-- Only query_log, with a short TTL; other system logs off to save disk. -->
+    <query_log>
+        <database>system</database>
+        <table>query_log</table>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </query_log>
+</clickhouse>

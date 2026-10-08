@@ -1,0 +1,3 @@
+# No managed services: ClickHouse is not available on Upsun Fixed,
+# so it runs as the `clickhouse` app (see applications.yaml).
+{}

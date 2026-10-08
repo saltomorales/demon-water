@@ -7,4 +7,4 @@ providers:
     disableDeletion: true
     allowUiUpdates: false
     options:
-      path: /app/grafana/dashboards
+      path: /app/dashboards

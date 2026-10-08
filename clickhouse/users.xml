@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!-- Passwords come from Upsun sensitive variables (env:CH_*_PASSWORD). -->
+<clickhouse>
+    <profiles>
+        <default>
+            <max_memory_usage>1000000000</max_memory_usage>
+            <max_threads>2</max_threads>
+        </default>
+        <!-- readonly=2: no writes, but clients (Grafana plugin) may still set query settings. -->
+        <readonly>
+            <readonly>2</readonly>
+            <max_memory_usage>1000000000</max_memory_usage>
+            <max_threads>2</max_threads>
+            <max_execution_time>60</max_execution_time>
+        </readonly>
+    </profiles>
+
+    <quotas>
+        <default>
+            <interval>
+                <duration>3600</duration>
+                <queries>0</queries>
+                <errors>0</errors>
+                <result_rows>0</result_rows>
+                <read_rows>0</read_rows>
+                <execution_time>0</execution_time>
+            </interval>
+        </default>
+    </quotas>
+
+    <users>
+        <!-- Migrations and manual work over `upsun ssh -A clickhouse`. -->
+        <admin>
+            <password from_env="CH_ADMIN_PASSWORD"/>
+            <networks><ip>::/0</ip></networks>
+            <profile>default</profile>
+            <quota>default</quota>
+            <access_management>1</access_management>
+        </admin>
+
+        <!-- Vector sink. -->
+        <vector>
+            <password from_env="CH_VECTOR_PASSWORD"/>
+            <networks><ip>::/0</ip></networks>
+            <profile>default</profile>
+            <quota>default</quota>
+            <grants>
+                <query>GRANT INSERT, SELECT ON rum.*</query>
+            </grants>
+        </vector>
+
+        <!-- Grafana datasource. -->
+        <grafana>
+            <password from_env="CH_GRAFANA_PASSWORD"/>
+            <networks><ip>::/0</ip></networks>
+            <profile>readonly</profile>
+            <quota>default</quota>
+            <grants>
+                <query>GRANT SELECT ON rum.*</query>
+            </grants>
+        </grafana>
+    </users>
+</clickhouse>

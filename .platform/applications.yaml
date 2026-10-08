@@ -1,0 +1,92 @@
+# Upsun Fixed project: RUM POC (Vector → ClickHouse → Grafana).
+# ClickHouse is not a Fixed service, so it runs as an app with a local disk.
+# It has no route; Vector and Grafana reach it only through relationships.
+# Reference: https://fixed.docs.upsun.com/create-apps/app-reference/composable-image.html
+#
+# Plan storage is shared: keep the sum of `disk` within the plan (5 GB on Development).
+
+# Ingest: receives sendBeacon POSTs from shops, writes to ClickHouse.
+vector:
+  type: "composable:26.05"
+  source:
+    root: vector
+  stack:
+    packages:
+      - vector
+      - jq
+  relationships:
+    clickhouse:
+      service: clickhouse
+      endpoint: http
+  disk: 256
+  mounts:
+    "/.vector-data":
+      source: local
+      source_path: vector-data
+  web:
+    commands:
+      start: "bash start.sh"
+    upstream:
+      socket_family: tcp
+      protocol: http
+
+# Storage: self-managed ClickHouse, HTTP interface on $PORT.
+clickhouse:
+  type: "composable:26.05"
+  source:
+    root: clickhouse
+  stack:
+    packages:
+      - clickhouse
+  disk: 4096
+  mounts:
+    "/.clickhouse-data":
+      source: local
+      source_path: clickhouse-data
+  web:
+    commands:
+      start: "bash start.sh"
+      # Runs before the container gets traffic: waits for the server, applies schema/*.sql.
+      post_start: "bash migrate.sh"
+    upstream:
+      socket_family: tcp
+      protocol: http
+
+# Dashboards: reads ClickHouse with a read-only user.
+grafana:
+  type: "composable:26.05"
+  source:
+    root: grafana
+  stack:
+    packages:
+      - grafana
+      - jq
+  relationships:
+    clickhouse:
+      service: clickhouse
+      endpoint: http
+  variables:
+    env:
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_PATHS_DATA: "/app/.grafana-data"
+      GF_PATHS_LOGS: "/app/.grafana-data/log"
+      GF_PATHS_PLUGINS: "/app/.grafana-plugins"
+      GF_PATHS_PROVISIONING: "/app/provisioning"
+  disk: 256
+  mounts:
+    "/.grafana-data":
+      source: local
+      source_path: grafana-data
+  hooks:
+    build: |
+      set -e
+      bash install-plugins.sh
+  web:
+    commands:
+      start: "bash start.sh"
+    upstream:
+      socket_family: tcp
+      protocol: http
