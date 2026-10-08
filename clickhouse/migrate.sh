@@ -4,7 +4,7 @@
 set -euo pipefail
 
 ch() {
-  clickhouse client --host 127.0.0.1 --port 9000 \
+  /app/bin/clickhouse client --host 127.0.0.1 --port 9000 \
     --user admin --password "$CH_ADMIN_PASSWORD" "$@"
 }
 

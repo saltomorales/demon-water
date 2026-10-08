@@ -37,7 +37,12 @@ clickhouse:
     root: clickhouse
   stack:
     packages:
-      - clickhouse
+      - curl
+  # Official static binary (see install.sh), not the Nix package.
+  hooks:
+    build: |
+      set -e
+      bash install.sh
   disk: 4096
   mounts:
     "/.clickhouse-data":
@@ -75,6 +80,7 @@ grafana:
       GF_PATHS_LOGS: "/app/.grafana-data/log"
       GF_PATHS_PLUGINS: "/app/.grafana-plugins"
       GF_PATHS_PROVISIONING: "/app/provisioning"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
   disk: 256
   mounts:
     "/.grafana-data":

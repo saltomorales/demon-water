@@ -9,4 +9,4 @@ done
 mkdir -p /app/.clickhouse-data/tmp /app/.clickhouse-data/user_files /app/.clickhouse-data/format_schemas
 
 # The app dir is read-only at runtime; ClickHouse writes preprocessed configs under <path> (the mount).
-exec clickhouse server --config-file=/app/config.xml
+exec /app/bin/clickhouse server --config-file=/app/config.xml
