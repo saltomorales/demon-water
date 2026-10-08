@@ -24,6 +24,8 @@
     </user_directories>
     <default_profile>default</default_profile>
     <default_database>rum</default_database>
+    <!-- All dates and day boundaries in UTC, regardless of the container timezone. -->
+    <timezone>UTC</timezone>
 
     <!-- Keep memory small. Upsun containers expose no cgroup memory file, so ClickHouse sees the
          host's RAM (~124 GiB) and a ratio would be meaningless: cap it with an absolute value.
