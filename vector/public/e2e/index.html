@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RUM e2e test page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; max-width: 720px; }
+    .hero { height: 320px; background: linear-gradient(135deg, #2b5876, #4e4376); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .banner { background: #ffd54f; padding: 24px; }
+    button { font-size: 18px; padding: 12px 20px; margin: 16px 0; }
+  </style>
+  <script>window.RUM_RELEASE = 'e2e-test';</script>
+  <!-- Same as the GTM Custom HTML tag: async, cross-origin to the ingest domain in production. -->
+  <script async src="/static/rum.js"></script>
+</head>
+<!-- Magento product page body class, so pageType = catalog-product-view. -->
+<body class="catalog-product-view page-layout-1column">
+  <div id="slot"></div>
+  <div class="hero">Synthetic product page</div>
+  <h1>RUM end-to-end test</h1>
+  <p>Click the button (slow handler → INP), then switch tab or navigate away (visibilitychange → beacon).</p>
+  <button id="slow">Add to cart (slow)</button>
+  <p id="out"></p>
+  <script>
+    // Late banner above the content → layout shift (CLS).
+    setTimeout(function () {
+      var b = document.createElement('div');
+      b.className = 'banner';
+      b.textContent = 'Late cookie banner (layout shift)';
+      document.getElementById('slot').appendChild(b);
+    }, 600);
+    // ~200 ms of main-thread work on click → INP.
+    document.getElementById('slow').addEventListener('click', function addToCart() {
+      var end = performance.now() + 200;
+      while (performance.now() < end) {}
+      document.getElementById('out').textContent = 'Added at ' + new Date().toISOString();
+    });
+  </script>
+</body>
+</html>

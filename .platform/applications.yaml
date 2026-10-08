@@ -34,6 +34,20 @@ vector:
     upstream:
       socket_family: tcp
       protocol: http
+    locations:
+      "/":
+        passthru: true
+      # Collector bundle (/static/rum.js) and the e2e test page (/static/e2e/), served by nginx.
+      "/static":
+        root: "public"
+        passthru: false
+        allow: true
+        index:
+          - index.html
+        expires: 5m
+        headers:
+          # Lets the e2e page exercise the collector's cache-status context.
+          Server-Timing: "cache;desc=HIT"
 
 # Storage: self-managed ClickHouse, HTTP interface on $PORT.
 clickhouse:
