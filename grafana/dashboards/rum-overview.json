@@ -143,7 +143,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'LCP'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'LCP'"
         }
       ],
       "fieldConfig": {
@@ -240,7 +240,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'INP'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'INP'"
         }
       ],
       "fieldConfig": {
@@ -337,7 +337,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS'"
         }
       ],
       "fieldConfig": {
@@ -434,7 +434,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'FCP'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'FCP'"
         }
       ],
       "fieldConfig": {
@@ -531,7 +531,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'TTFB'"
+          "rawSql": "SELECT quantileExactInclusive(0.75)(value) AS p75, count() AS page_views FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'TTFB'"
         }
       ],
       "fieldConfig": {
@@ -628,7 +628,7 @@
           "editorType": "sql",
           "format": 0,
           "queryType": "timeseries",
-          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExactInclusive(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric != 'CLS' GROUP BY time, metric ORDER BY time"
+          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExactInclusive(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric != 'CLS' GROUP BY time, metric ORDER BY time"
         }
       ],
       "fieldConfig": {
@@ -676,7 +676,7 @@
           "editorType": "sql",
           "format": 0,
           "queryType": "timeseries",
-          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExactInclusive(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS' GROUP BY time, metric ORDER BY time"
+          "rawSql": "SELECT toStartOfDay(first_ts) AS time, metric, quantileExactInclusive(0.75)(value) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND $__timeFilter(ts)\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS' GROUP BY time, metric ORDER BY time"
         }
       ],
       "fieldConfig": {
@@ -725,7 +725,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT metric, count() AS page_views, round(countIf(rating = 'good') / count() * 100, 1) AS good_pct, round(countIf(rating = 'needs-improvement') / count() * 100, 1) AS needs_improvement_pct, round(countIf(rating = 'poor') / count() * 100, 1) AS poor_pct FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY metric ORDER BY metric"
+          "rawSql": "SELECT metric, count() AS page_views, round(countIf(rating = 'good') / count() * 100, 1) AS good_pct, round(countIf(rating = 'needs-improvement') / count() * 100, 1) AS needs_improvement_pct, round(countIf(rating = 'poor') / count() * 100, 1) AS poor_pct FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY metric ORDER BY metric"
         }
       ],
       "fieldConfig": {
@@ -760,7 +760,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT page_type, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY page_type, metric ORDER BY page_type, metric"
+          "rawSql": "SELECT page_type, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY page_type, metric ORDER BY page_type, metric"
         }
       ],
       "fieldConfig": {
@@ -796,7 +796,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT navigation_type, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY navigation_type, metric ORDER BY navigation_type, metric"
+          "rawSql": "SELECT navigation_type, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY navigation_type, metric ORDER BY navigation_type, metric"
         }
       ],
       "fieldConfig": {
@@ -831,7 +831,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "table",
-          "rawSql": "SELECT device, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY device, metric ORDER BY device, metric"
+          "rawSql": "SELECT device, metric, count() AS page_views, round(quantileExactInclusive(0.75)(value), 3) AS p75 FROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) GROUP BY device, metric ORDER BY device, metric"
         }
       ],
       "fieldConfig": {
@@ -900,6 +900,338 @@
         "y": 27,
         "w": 24,
         "h": 8
+      }
+    },
+    {
+      "type": "table",
+      "title": "LCP: elements (28 days)",
+      "description": "LCP element (CSS selector) per page view. Phases: time to first byte \u2192 resource load delay \u2192 resource load duration \u2192 element render delay.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT if(JSONExtractString(attribution, 'target') = '', '(no element)', JSONExtractString(attribution, 'target')) AS element,\n  topK(1)(page_type)[1] AS main_page_type, count() AS page_views, round(quantileExactInclusive(0.75)(value)) AS lcp_p75, round(countIf(rating = 'poor') / count() * 100, 1) AS poor_pct,\n  round(quantileExactInclusive(0.75)(JSONExtractFloat(attribution, 'timeToFirstByte'))) AS ttfb_p75,\n  round(quantileExactInclusive(0.75)(JSONExtractFloat(attribution, 'resourceLoadDelay'))) AS load_delay_p75,\n  round(quantileExactInclusive(0.75)(JSONExtractFloat(attribution, 'resourceLoadDuration'))) AS load_duration_p75,\n  round(quantileExactInclusive(0.75)(JSONExtractFloat(attribution, 'elementRenderDelay'))) AS render_delay_p75,\n  topK(1)(JSONExtractString(attribution, 'url'))[1] AS top_resource\nFROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'LCP'\nGROUP BY element ORDER BY page_views * lcp_p75 DESC LIMIT 50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "lcp_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ttfb_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "load_delay_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "load_duration_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "render_delay_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "poor_pct"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 13,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 24,
+        "h": 9
+      }
+    },
+    {
+      "type": "table",
+      "title": "CLS: shifting elements (28 days)",
+      "description": "Element with the largest single layout shift in the page view (web-vitals reports only the largest one).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT if(JSONExtractString(attribution, 'largestShiftTarget') = '', '(no element)', JSONExtractString(attribution, 'largestShiftTarget')) AS element,\n  topK(1)(page_type)[1] AS main_page_type, count() AS page_views,\n  round(quantileExactInclusive(0.75)(value), 3) AS cls_p75, round(countIf(rating = 'poor') / count() * 100, 1) AS poor_pct,\n  round(quantileExactInclusive(0.75)(JSONExtractFloat(attribution, 'largestShiftValue')), 3) AS largest_shift_p75,\n  round(quantileExactInclusive(0.5)(JSONExtractFloat(attribution, 'largestShiftTime'))) AS shift_time_median,\n  topK(1)(JSONExtractString(attribution, 'loadState'))[1] AS load_state\nFROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'CLS' AND value > 0\nGROUP BY element ORDER BY page_views * cls_p75 DESC LIMIT 50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "shift_time_median"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "poor_pct"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 14,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 44,
+        "w": 24,
+        "h": 9
+      }
+    },
+    {
+      "type": "table",
+      "title": "INP: elements (28 days)",
+      "description": "Interaction target per page view. Phases: input delay (main thread busy) \u2192 processing (event handlers) \u2192 presentation delay (style, layout, paint).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT if(JSONExtractString(attribution, 'interactionTarget') = '', '(no element)', JSONExtractString(attribution, 'interactionTarget')) AS element,\n  topK(1)(JSONExtractString(attribution, 'interactionType'))[1] AS type,\n  topK(1)(page_type)[1] AS main_page_type, count() AS page_views, round(quantileExactInclusive(0.75)(value)) AS inp_p75, round(countIf(rating = 'poor') / count() * 100, 1) AS poor_pct,\n  round(quantileExactInclusive(0.75)(JSONExtractFloat(attribution, 'inputDelay'))) AS input_delay_p75,\n  round(quantileExactInclusive(0.75)(JSONExtractFloat(attribution, 'processingDuration'))) AS processing_p75,\n  round(quantileExactInclusive(0.75)(JSONExtractFloat(attribution, 'presentationDelay'))) AS presentation_p75,\n  topK(1)(JSONExtractString(attribution, 'loadState'))[1] AS load_state\nFROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'INP'\nGROUP BY element ORDER BY page_views * inp_p75 DESC LIMIT 50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "inp_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "input_delay_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "processing_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "presentation_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "poor_pct"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 15,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 53,
+        "w": 24,
+        "h": 9
+      }
+    },
+    {
+      "type": "table",
+      "title": "INP: longest scripts (28 days)",
+      "description": "Longest script (Long Animation Frames) during the INP interaction: source file without query string and its invoker, e.g. BUTTON#id.onclick.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT if(JSONExtractString(attribution, 'longestScript', 'sourceURL') = '', '(unknown or inline)', JSONExtractString(attribution, 'longestScript', 'sourceURL')) AS script,\n  JSONExtractString(attribution, 'longestScript', 'invoker') AS invoker,\n  topK(1)(JSONExtractString(attribution, 'longestScript', 'subpart'))[1] AS phase,\n  count() AS page_views, round(quantileExactInclusive(0.75)(value)) AS inp_p75,\n  round(quantileExactInclusive(0.75)(JSONExtractFloat(attribution, 'longestScript', 'duration'))) AS script_duration_p75\nFROM (\n  SELECT tenant, metric, id,\n    argMax(value, ts) AS value, argMax(rating, ts) AS rating,\n    argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,\n    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,\n    min(ts) AS first_ts\n  FROM rum.web_vitals\n  WHERE tenant IN (${tenant:singlequote}) AND ts >= now() - INTERVAL 28 DAY\n  GROUP BY tenant, metric, id\n)\nWHERE page_type IN (${page_type:singlequote}) AND device IN (${device:singlequote}) AND navigation_type IN (${navigation_type:singlequote}) AND metric = 'INP' AND JSONHas(attribution, 'longestScript')\nGROUP BY script, invoker ORDER BY page_views * script_duration_p75 DESC LIMIT 50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "inp_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "script_duration_p75"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 16,
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "clickhouse"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 62,
+        "w": 24,
+        "h": 9
       }
     }
   ]

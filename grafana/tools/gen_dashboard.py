@@ -10,7 +10,8 @@ def dedup(where):
   SELECT tenant, metric, id,
     argMax(value, ts) AS value, argMax(rating, ts) AS rating,
     argMax(page_type, ts) AS page_type, argMax(device, ts) AS device,
-    argMax(navigation_type, ts) AS navigation_type, min(ts) AS first_ts
+    argMax(navigation_type, ts) AS navigation_type, argMax(attribution, ts) AS attribution,
+    min(ts) AS first_ts
   FROM rum.web_vitals
   WHERE tenant IN (${{tenant:singlequote}}) AND {where}
   GROUP BY tenant, metric, id
@@ -86,6 +87,75 @@ add({"type": "timeseries", "title": "Daily p75 from aggregates (13 months)",
                         "GROUP BY time, metric ORDER BY time", 0)],
      "fieldConfig": {"defaults": {"unit": "ms", "custom": {"drawStyle": "line", "pointSize": 6, "showPoints": "always"}}, "overrides": []},
      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}}}, 0, 27, 24, 8)
+
+# Row 5: attribution (what causes LCP, CLS and INP), 28 days.
+# Attribution belongs to the last value of each metric id, i.e. the one that counts.
+# Phase columns are p75 of each phase on its own: they do not add up to the metric's p75.
+def attr_table(title, desc, sql, x, y, w, h, units):
+    overrides = [{"matcher": {"id": "byName", "options": col},
+                  "properties": [{"id": "unit", "value": unit}]} for col, unit in units.items()]
+    add({"type": "table", "title": title, "description": desc,
+         "targets": [target(sql, 1)],
+         "fieldConfig": {"defaults": {}, "overrides": overrides},
+         "options": {"showHeader": True, "cellHeight": "sm"}}, x, y, w, h)
+
+J = "JSONExtractString(attribution, '{}')"
+JF = "JSONExtractFloat(attribution, '{}')"
+P75 = "round(quantileExactInclusive(0.75)({}))"
+POOR = "round(countIf(rating = 'poor') / count() * 100, 1) AS poor_pct"
+
+attr_table("LCP: elements (28 days)",
+  "LCP element (CSS selector) per page view. Phases: time to first byte → resource load delay → resource load duration → element render delay.",
+  f"""SELECT if({J.format('target')} = '', '(no element)', {J.format('target')}) AS element,
+  topK(1)(page_type)[1] AS main_page_type, count() AS page_views, {P75.format('value')} AS lcp_p75, {POOR},
+  {P75.format(JF.format('timeToFirstByte'))} AS ttfb_p75,
+  {P75.format(JF.format('resourceLoadDelay'))} AS load_delay_p75,
+  {P75.format(JF.format('resourceLoadDuration'))} AS load_duration_p75,
+  {P75.format(JF.format('elementRenderDelay'))} AS render_delay_p75,
+  topK(1)({J.format('url')})[1] AS top_resource
+FROM {D28} AND metric = 'LCP'
+GROUP BY element ORDER BY page_views * lcp_p75 DESC LIMIT 50""",
+  0, 35, 24, 9,
+  {"lcp_p75": "ms", "ttfb_p75": "ms", "load_delay_p75": "ms", "load_duration_p75": "ms", "render_delay_p75": "ms", "poor_pct": "percent"})
+
+attr_table("CLS: shifting elements (28 days)",
+  "Element with the largest single layout shift in the page view (web-vitals reports only the largest one).",
+  f"""SELECT if({J.format('largestShiftTarget')} = '', '(no element)', {J.format('largestShiftTarget')}) AS element,
+  topK(1)(page_type)[1] AS main_page_type, count() AS page_views,
+  round(quantileExactInclusive(0.75)(value), 3) AS cls_p75, {POOR},
+  round(quantileExactInclusive(0.75)({JF.format('largestShiftValue')}), 3) AS largest_shift_p75,
+  round(quantileExactInclusive(0.5)({JF.format('largestShiftTime')})) AS shift_time_median,
+  topK(1)({J.format('loadState')})[1] AS load_state
+FROM {D28} AND metric = 'CLS' AND value > 0
+GROUP BY element ORDER BY page_views * cls_p75 DESC LIMIT 50""",
+  0, 44, 24, 9,
+  {"shift_time_median": "ms", "poor_pct": "percent"})
+
+attr_table("INP: elements (28 days)",
+  "Interaction target per page view. Phases: input delay (main thread busy) → processing (event handlers) → presentation delay (style, layout, paint).",
+  f"""SELECT if({J.format('interactionTarget')} = '', '(no element)', {J.format('interactionTarget')}) AS element,
+  topK(1)({J.format('interactionType')})[1] AS type,
+  topK(1)(page_type)[1] AS main_page_type, count() AS page_views, {P75.format('value')} AS inp_p75, {POOR},
+  {P75.format(JF.format('inputDelay'))} AS input_delay_p75,
+  {P75.format(JF.format('processingDuration'))} AS processing_p75,
+  {P75.format(JF.format('presentationDelay'))} AS presentation_p75,
+  topK(1)({J.format('loadState')})[1] AS load_state
+FROM {D28} AND metric = 'INP'
+GROUP BY element ORDER BY page_views * inp_p75 DESC LIMIT 50""",
+  0, 53, 24, 9,
+  {"inp_p75": "ms", "input_delay_p75": "ms", "processing_p75": "ms", "presentation_p75": "ms", "poor_pct": "percent"})
+
+attr_table("INP: longest scripts (28 days)",
+  "Longest script (Long Animation Frames) during the INP interaction: source file without query string and its invoker, e.g. BUTTON#id.onclick.",
+  f"""SELECT if(JSONExtractString(attribution, 'longestScript', 'sourceURL') = '', '(unknown or inline)', JSONExtractString(attribution, 'longestScript', 'sourceURL')) AS script,
+  JSONExtractString(attribution, 'longestScript', 'invoker') AS invoker,
+  topK(1)(JSONExtractString(attribution, 'longestScript', 'subpart'))[1] AS phase,
+  count() AS page_views, {P75.format('value')} AS inp_p75,
+  {P75.format("JSONExtractFloat(attribution, 'longestScript', 'duration')")} AS script_duration_p75
+FROM {D28} AND metric = 'INP' AND JSONHas(attribution, 'longestScript')
+GROUP BY script, invoker ORDER BY page_views * script_duration_p75 DESC LIMIT 50""",
+  0, 62, 24, 9,
+  {"inp_p75": "ms", "script_duration_p75": "ms"})
 
 def var(name, label, col):
     return {"name": name, "label": label, "type": "query", "datasource": DS,
